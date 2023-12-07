@@ -1,0 +1,21 @@
+{
+  "name": "qstart-soft/sql-dml",
+  "type": "composer-plugin",
+  "license": "Apache License 2.0",
+  "autoload": {
+    "psr-4": {
+      "Qstart\\Db\\QueryBuilder\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Qstart\\Db\\Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": "^7.4 || ^8.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6"
+  }
+}
