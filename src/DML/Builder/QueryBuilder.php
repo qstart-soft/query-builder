@@ -220,9 +220,6 @@ class QueryBuilder implements BuilderInterface
 
     protected function buildTable($tables): string
     {
-        /** @var QueryInterface $query */
-        $query = $this->query;
-
         if ($tables) {
             if (is_string($tables)) {
                 $tables = [$tables];
