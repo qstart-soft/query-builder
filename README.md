@@ -24,6 +24,25 @@ $update = Query::update();
 $delete = Query::delete();
 ```
 
+**Creation:** \
+Getting sql statement and binding parameters:
+
+```php
+use Qstart\Db\QueryBuilder\Query;
+
+$query = Query::select();
+// ...
+$builder = $query->getQueryBuilder()
+// If necessary, you can set the dialect for the query builder
+$builder->setDialect(DialectSQL::POSTGRESQL);
+
+$expr = $builder->build();
+// Binding parameters
+$params = $expr->getParams();
+// Sql string
+$sql = $expr->getExpression();
+```
+
 **Expressions:** \
 Expressions are classes that inherit an \Qstart\Db\QueryBuilder\DML\Expression\ExprInterface interface. \
 These classes allow you to create specific expressions for a SQL query.
@@ -79,25 +98,6 @@ $expr = new Expr('created_at > now()');
 $expressionCh = $expr->getExpression(DialectSQL::CLICKHOUSE);
 $expressionPg = $expr->getExpression(DialectSQL::POSTGRESQL);
 $params = $expr->getParams();
-```
-
-**Creation:** \
-Getting sql statement and binding parameters:
-
-```php
-use Qstart\Db\QueryBuilder\Query;
-
-$query = Query::select();
-// ...
-$builder = $query->getQueryBuilder()
-// If necessary, you can set the dialect for the query builder
-$builder->setDialect(DialectSQL::POSTGRESQL);
-
-$expr = $builder->build();
-// Binding parameters
-$params = $expr->getParams();
-// Sql string
-$sql = $expr->getExpression();
 ```
 
 ## Part 2. Table format
