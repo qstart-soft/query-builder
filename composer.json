@@ -1,7 +1,7 @@
 {
   "name": "qstart-soft/query-builder",
   "type": "composer-plugin",
-  "license": "Apache License 2.0",
+  "license": "MIT",
   "autoload": {
     "psr-4": {
       "Qstart\\Db\\QueryBuilder\\": "src/"
