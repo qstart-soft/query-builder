@@ -1,7 +1,16 @@
 {
   "name": "qstart-soft/query-builder",
-  "type": "composer-plugin",
+  "type": "library",
+  "keywords": ["sql", "query", "builder", "query-builder"],
+  "description": "Library for creating DML (Data Manipulation Language) SQL statements.",
+  "minimum-stability": "stable",
   "license": "MIT",
+  "authors": [
+    {
+      "name": "SergeiGostev",
+      "email": "sergei.p.gostev@gmail.com"
+    }
+  ],
   "autoload": {
     "psr-4": {
       "Qstart\\Db\\QueryBuilder\\": "src/"
