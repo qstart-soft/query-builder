@@ -1,5 +1,5 @@
 {
-  "name": "qstart-soft/sql-dml",
+  "name": "qstart-soft/query-builder",
   "type": "composer-plugin",
   "license": "Apache License 2.0",
   "autoload": {
