@@ -58,6 +58,12 @@ class ConditionsBuilder implements BuilderInterface
             foreach ($conditions as $name => $value) {
                 $operator = '=';
                 if (is_array($value) || $value instanceof QueryInterface) {
+                    // If the array is empty, add a placeholder, because the expression "IN ()" will throw an SQL exception
+                    if ($value === []) {
+                        $expressions[] = '(0=1)';
+                        continue;
+                    }
+
                     $operator = 'IN';
                 }
                 if (in_array($value, [null, false, true], true)) {

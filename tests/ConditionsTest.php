@@ -32,6 +32,21 @@ class ConditionsTest extends \PHPUnit\Framework\TestCase
         );
         $this->assertSame($expr->getParams(), [$v1 => 2, $v2 => 10, $v3 => 12, $v4 => 13]);
 
+        // Empty IN condition
+        $query = Query::select()->from(['user'])->where([
+            'id' => 2,
+            'session_id' => 10,
+            'user_id' => [],
+        ]);
+        $expr = $query->getQueryBuilder()->build();
+        $v1 = BindingParamName::getName(BindingParamName::getN() - 1);
+        $v2 = BindingParamName::getName(BindingParamName::getN());
+        $this->assertSame(
+            $expr->getExpression(),
+            "SELECT * FROM user WHERE id = :$v1 AND session_id = :$v2 AND (0=1)"
+        );
+        $this->assertSame($expr->getParams(), [$v1 => 2, $v2 => 10]);
+
         // 2. Any Expression
 
         $query = Query::select()->from(['user'])
