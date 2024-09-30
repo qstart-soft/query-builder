@@ -67,7 +67,7 @@ trait ConditionTrait
      * @param string|array|ExprInterface|QueryInterface $condition See README for conditions format.
      * @return $this
      */
-    public function filterWhere(array $condition)
+    public function filterWhere($condition)
     {
         $condition = $this->filterCondition($condition);
         if ($condition !== []) {
@@ -83,7 +83,7 @@ trait ConditionTrait
      * @param string|array|ExprInterface|QueryInterface $condition See README for conditions format.
      * @return $this
      */
-    public function andFilterWhere(array $condition)
+    public function andFilterWhere($condition)
     {
         $condition = $this->filterCondition($condition);
         if ($condition !== []) {
@@ -99,7 +99,7 @@ trait ConditionTrait
      * @param string|array|ExprInterface|QueryInterface $condition See README for conditions format.
      * @return $this
      */
-    public function orFilterWhere(array $condition)
+    public function orFilterWhere($condition)
     {
         $condition = $this->filterCondition($condition);
         if ($condition !== []) {

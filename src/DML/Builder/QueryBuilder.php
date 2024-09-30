@@ -347,31 +347,28 @@ class QueryBuilder implements BuilderInterface
 
         if (count($values) === 1 && $values[0] instanceof SelectQuery) {
             return $this->prepareValue($values[0], false);
-        } else {
-            $queries = array_filter($values, fn($row) => $row instanceof QueryInterface);
+        }
 
-            if (!empty($queries)) {
+        // Получаем столбцы и кэшируем их в виде строки
+        $columns = array_keys($values[0]);
+        $sqlColumns = implode(', ', $columns);
+
+        // Начинаем строить SQL для значений
+        $sqlValues = [];
+        foreach ($values as $row) {
+            if ($row instanceof QueryInterface) {
                 throw new QueryBuilderException('SELECT statements with another values in VALUES clause are not supported');
             }
-
-            $columns = array_keys($values[0]);
-            $sqlColumns = implode(', ', $columns);
-
-            $sqlValues = [];
-            foreach ($values as $row) {
-                $row = array_filter($row, fn($key) => in_array($key, $columns), ARRAY_FILTER_USE_KEY);
-
-                $row = array_map(fn($value) => $this->prepareValue($value, true), $row);
-
-                $orderedRow = array_merge(array_flip($columns), $row);
-
-                $sqlValues[] = '(' . implode(', ', $orderedRow) . ')';
+            // Собираем значения в правильном порядке без использования array_merge
+            $orderedRow = [];
+            foreach ($columns as $column) {
+                $orderedRow[] = $this->prepareValue($row[$column] ?? null, true);
             }
 
-            $sql = "($sqlColumns) VALUES " . implode(', ', $sqlValues);
-
-            return $sql;
+            $sqlValues[] = '(' . implode(', ', $orderedRow) . ')';
         }
+
+        return "($sqlColumns) VALUES " . implode(', ', $sqlValues);
     }
 
     protected function buildCondition($conditions): string
@@ -394,6 +391,8 @@ class QueryBuilder implements BuilderInterface
 
     protected function addParams(array $params)
     {
-        $this->params = array_merge($this->params, $params);
+        foreach ($params as $key => $value) {
+            $this->params[$key] = $value;
+        }
     }
 }

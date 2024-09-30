@@ -121,6 +121,8 @@ class ConditionsBuilder implements BuilderInterface
 
     protected function addParams(array $params)
     {
-        $this->params = array_merge($this->params, $params);
+        foreach ($params as $key => $value) {
+            $this->params[$key] = $value;
+        }
     }
 }
