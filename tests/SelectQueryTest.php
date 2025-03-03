@@ -3,6 +3,7 @@
 namespace Qstart\Db\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Qstart\Db\QueryBuilder\DML\CTE\CTE;
 use Qstart\Db\QueryBuilder\DML\Expression\CompareExpr;
 use Qstart\Db\QueryBuilder\DML\Expression\Expr;
 use Qstart\Db\QueryBuilder\Helper\BindingParamName;
@@ -39,6 +40,112 @@ class SelectQueryTest extends TestCase
         $expr = $query->getQueryBuilder()->build();
         $this->assertSame($expr->getExpression(), "SELECT id, name, created_at::DATE as date");
         $this->assertSame($expr->getParams(), []);
+    }
+
+    public function testWithClause()
+    {
+        $query = Query::select()
+            ->addWith(
+                new CTE(
+                    'fibonacci',
+                    Query::select()
+                        ->select(['n1' => 0, 'n2' => 1])
+                        ->union(
+                            Query::select()
+                                ->select(['n1' => 'n2', 'n2' => new Expr('n1 + n2')])
+                                ->from('fibonacci')
+                                ->where(new Expr('n2 < 100')),
+                            true,
+                        ),
+                true
+                )
+            )
+            ->select(['fibonacci_number' => 'n1'])
+            ->from('fibonacci');
+        $expr = $query->getQueryBuilder()->build();
+        $this->assertSame(
+            'WITH RECURSIVE fibonacci AS ((SELECT 0 AS n1, 1 AS n2 UNION ALL SELECT n2 AS n1, n1 + n2 AS n2 FROM fibonacci WHERE n2 < 100)) SELECT n1 AS fibonacci_number FROM fibonacci',
+            $expr->getExpression(),
+        );
+        $this->assertSame([], $expr->getParams());
+
+        $query = Query::select()
+            ->addWith(
+                new CTE(
+                    'fibonacci',
+                    Query::select()
+                        ->select(['n1' => 0, 'n2' => 1])
+                        ->union(
+                            Query::select()
+                                ->select(['n1' => 'n2', 'n2' => new Expr('n1 + n2')])
+                                ->from('fibonacci')
+                                ->where(new Expr('n2 < :max', ['max' => 100])),
+                            true
+                        ),
+                    true
+                )
+            )
+            ->select(['fibonacci_number' => 'n1'])
+            ->from('fibonacci');
+        $expr = $query->getQueryBuilder()->build();
+        $this->assertSame(
+            'WITH RECURSIVE fibonacci AS ((SELECT 0 AS n1, 1 AS n2 UNION ALL SELECT n2 AS n1, n1 + n2 AS n2 FROM fibonacci WHERE n2 < :max)) SELECT n1 AS fibonacci_number FROM fibonacci',
+            $expr->getExpression(),
+        );
+        $this->assertSame(['max' => 100], $expr->getParams());
+
+        $query = Query::select()
+            ->addWith(
+                new CTE(
+                    'fibonacci',
+                    Query::select()
+                        ->select(['n1' => 0, 'n2' => 1])
+                        ->union(
+                            Query::select()
+                                ->select(['n1' => 'n2', 'n2' => new Expr('n1 + n2')])
+                                ->from('fibonacci')
+                                ->where(new Expr('n2 < :max', ['max' => 100])),
+                            true
+                        ),
+                    true
+                )
+            )
+            ->addWith(
+                new CTE(
+                    'fibonacci_1',
+                    Query::select()
+                        ->select(['n1' => 0, 'n2' => 1])
+                        ->union(
+                            Query::select()
+                                ->select(['n1' => 'n2', 'n2' => new Expr('n1 + n2')])
+                                ->from('fibonacci_1')
+                                ->where(new Expr('n2 < :max', ['max' => 100])),
+                            true
+                        )
+                )
+            )
+            ->select(['fibonacci_number' => 'n1'])
+            ->from('fibonacci');
+        $expr = $query->getQueryBuilder()->build();
+        $this->assertSame(
+            'WITH RECURSIVE fibonacci AS ((SELECT 0 AS n1, 1 AS n2 UNION ALL SELECT n2 AS n1, n1 + n2 AS n2 FROM fibonacci WHERE n2 < :max)), fibonacci_1 AS ((SELECT 0 AS n1, 1 AS n2 UNION ALL SELECT n2 AS n1, n1 + n2 AS n2 FROM fibonacci_1 WHERE n2 < :max)) SELECT n1 AS fibonacci_number FROM fibonacci',
+            $expr->getExpression(),
+        );
+        $this->assertSame(['max' => 100], $expr->getParams());
+        $query = Query::select()
+            ->with([
+                new CTE(
+                    'ids',
+                    new Expr('VALUES (1), (2), (3)'),
+                ),
+            ])
+            ->from('"user"')
+            ->where(['id' => Query::select()->select('id')->from('ids')]);
+        $expr = $query->getQueryBuilder()->build();
+        $this->assertSame(
+            'WITH ids AS (VALUES (1), (2), (3)) SELECT * FROM "user" WHERE id IN (SELECT id FROM ids)',
+            $expr->getExpression(),
+        );
     }
 
     public function testGroupByClause()

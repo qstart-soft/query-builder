@@ -2,6 +2,7 @@
 
 namespace Qstart\Db\QueryBuilder\DML\Builder;
 
+use Qstart\Db\QueryBuilder\DML\CTE\CTE;
 use Qstart\Db\QueryBuilder\DML\Expression\Expr;
 use Qstart\Db\QueryBuilder\DML\Expression\ExprInterface;
 use Qstart\Db\QueryBuilder\DML\Query\DeleteQuery;
@@ -61,7 +62,10 @@ class QueryBuilder implements BuilderInterface
         $query = $this->query;
         $unionQueries = $query->getUnionQueries();
 
-        $sql = "SELECT {$this->buildSelect()}";
+        $withSql = $this->buildWith($query->getWith());
+        $sql = $withSql ? "$withSql " : '';
+
+        $sql .= "SELECT {$this->buildSelect()}";
 
         $from = $this->buildTable($query->getNormalizedTables());
         $from && $sql .= " FROM $from";
@@ -127,9 +131,12 @@ class QueryBuilder implements BuilderInterface
         /** @var DeleteQuery $query */
         $query = $this->query;
 
+        $withSql = $this->buildWith($query->getWith());
+        $sql = $withSql ? "$withSql " : '';
+
         $start = $this->prepareValue($query->getStartOfQuery() ?: 'DELETE FROM', false);
 
-        $sql = "$start {$this->buildTable($query->getNormalizedTables())}";
+        $sql .= "$start {$this->buildTable($query->getNormalizedTables())}";
 
         $using = $this->buildTable($query->getUsing());
         $using && $sql .= " USING $using";
@@ -154,9 +161,12 @@ class QueryBuilder implements BuilderInterface
         /** @var UpdateQuery $query */
         $query = $this->query;
 
+        $withSql = $this->buildWith($query->getWith());
+        $sql = $withSql ? "$withSql " : '';
+
         $start = $this->prepareValue($query->getStartOfQuery() ?: 'UPDATE', false);
 
-        $sql = "$start {$this->buildTable($query->getNormalizedTables())}";
+        $sql .= "$start {$this->buildTable($query->getNormalizedTables())}";
 
         $set = $this->buildUpdateSet();
         $set && $sql .= " SET $set";
@@ -394,5 +404,28 @@ class QueryBuilder implements BuilderInterface
         foreach ($params as $key => $value) {
             $this->params[$key] = $value;
         }
+    }
+
+    /**
+     * @param CTE[] $with
+     *
+     * @return string
+     */
+    protected function buildWith(array $with): string
+    {
+        if ($with !== []) {
+            $withSql = [];
+            foreach ($with as $cte) {
+                $withQuery = $this->prepareValue($cte->getQuery(), false);
+                $withSql[] = sprintf(
+                    '%s%s AS (%s)',
+                    $cte->isRecursive() ? 'RECURSIVE ' : '',
+                    $cte->getAlias(),
+                    $withQuery,
+                );
+            }
+            return 'WITH ' . implode(', ', $withSql);
+        }
+        return '';
     }
 }

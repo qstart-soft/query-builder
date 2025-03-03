@@ -7,7 +7,7 @@ use Qstart\Db\QueryBuilder\DML\Traits\ConditionTrait;
 use Qstart\Db\QueryBuilder\DML\Traits\JoiningTrait;
 use Qstart\Db\QueryBuilder\DML\Traits\LimitTrait;
 use Qstart\Db\QueryBuilder\DML\Traits\TableTrait;
-use Qstart\Exception\InvalidArgumentException;
+use Qstart\Db\QueryBuilder\DML\Traits\WithTrait;
 
 /**
  * Creating a SQL SELECT Statement.
@@ -20,6 +20,7 @@ class SelectQuery extends QueryAbstract
     }
     use ConditionTrait;
     use LimitTrait;
+    use WithTrait;
 
     protected array $select = [];
     protected bool $distinct = false;
