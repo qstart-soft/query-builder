@@ -2,20 +2,26 @@
 
 namespace Qstart\Db\QueryBuilder\DML\CTE;
 
+use InvalidArgumentException;
+use Qstart\Db\QueryBuilder\DML\Expression\ExprInterface;
 use Qstart\Db\QueryBuilder\DML\Query\SelectQuery;
 
 class CTE
 {
     protected string $alias;
-    protected SelectQuery $query;
+    /** @var SelectQuery|ExprInterface $query */
+    protected $query;
     protected bool $recursive;
 
     public function __construct(
         string $alias,
-        SelectQuery $query,
+        $query,
         bool $recursive = false
     ) {
         $this->alias = $alias;
+        if (!$query instanceof SelectQuery && !$query instanceof ExprInterface) {
+            throw new InvalidArgumentException('Query must be an instance of ' . SelectQuery::class . ' or ' . ExprInterface::class);
+        }
         $this->query = $query;
         $this->recursive = $recursive;
     }
@@ -25,7 +31,10 @@ class CTE
         return $this->alias;
     }
 
-    public function getQuery(): SelectQuery
+    /**
+     * @return ExprInterface|SelectQuery
+     */
+    public function getQuery()
     {
         return $this->query;
     }

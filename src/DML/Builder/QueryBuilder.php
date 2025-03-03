@@ -62,10 +62,10 @@ class QueryBuilder implements BuilderInterface
         $query = $this->query;
         $unionQueries = $query->getUnionQueries();
 
-        $sql = "SELECT {$this->buildSelect()}";
-
         $withSql = $this->buildWith($query->getWith());
-        $sql = $withSql ? "$withSql $sql" : $sql;
+        $sql = $withSql ? "$withSql " : '';
+
+        $sql .= "SELECT {$this->buildSelect()}";
 
         $from = $this->buildTable($query->getNormalizedTables());
         $from && $sql .= " FROM $from";
@@ -131,12 +131,12 @@ class QueryBuilder implements BuilderInterface
         /** @var DeleteQuery $query */
         $query = $this->query;
 
+        $withSql = $this->buildWith($query->getWith());
+        $sql = $withSql ? "$withSql " : '';
+
         $start = $this->prepareValue($query->getStartOfQuery() ?: 'DELETE FROM', false);
 
-        $sql = "$start {$this->buildTable($query->getNormalizedTables())}";
-
-        $withSql = $this->buildWith($query->getWith());
-        $sql = $withSql ? "$withSql $sql" : $sql;
+        $sql .= "$start {$this->buildTable($query->getNormalizedTables())}";
 
         $using = $this->buildTable($query->getUsing());
         $using && $sql .= " USING $using";
@@ -161,12 +161,12 @@ class QueryBuilder implements BuilderInterface
         /** @var UpdateQuery $query */
         $query = $this->query;
 
+        $withSql = $this->buildWith($query->getWith());
+        $sql = $withSql ? "$withSql " : '';
+
         $start = $this->prepareValue($query->getStartOfQuery() ?: 'UPDATE', false);
 
-        $sql = "$start {$this->buildTable($query->getNormalizedTables())}";
-
-        $withSql = $this->buildWith($query->getWith());
-        $sql = $withSql ? "$withSql $sql" : $sql;
+        $sql .= "$start {$this->buildTable($query->getNormalizedTables())}";
 
         $set = $this->buildUpdateSet();
         $set && $sql .= " SET $set";
@@ -196,9 +196,6 @@ class QueryBuilder implements BuilderInterface
         $start = $this->prepareValue($query->getStartOfQuery() ?: 'INSERT INTO', false);
 
         $sql = "$start {$this->buildTable($query->getNormalizedTables())} {$this->buildInsertValues()}";
-
-        $withSql = $this->buildWith($query->getWith());
-        $sql = $withSql ? "$withSql $sql" : $sql;
 
         $end = $this->prepareValue($query->getEndOfQuery() ?: '', false);
         $end && $sql .= " $end";
@@ -418,18 +415,15 @@ class QueryBuilder implements BuilderInterface
     {
         if ($with !== []) {
             $withSql = [];
-            $withParams = [];
             foreach ($with as $cte) {
-                $withQuery = $cte->getQuery()->getQueryBuilder()->build();
+                $withQuery = $this->prepareValue($cte->getQuery(), false);
                 $withSql[] = sprintf(
                     '%s%s AS (%s)',
                     $cte->isRecursive() ? 'RECURSIVE ' : '',
                     $cte->getAlias(),
-                    $withQuery->getExpression($this->dialect),
+                    $withQuery,
                 );
-                $withParams = array_merge($withParams, $withQuery->getParams());
             }
-            $this->params = array_merge($this->params, $withParams);
             return 'WITH ' . implode(', ', $withSql);
         }
         return '';

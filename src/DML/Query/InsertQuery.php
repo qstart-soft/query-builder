@@ -4,7 +4,6 @@ namespace Qstart\Db\QueryBuilder\DML\Query;
 
 use Qstart\Db\QueryBuilder\DML\Expression\ExprInterface;
 use Qstart\Db\QueryBuilder\DML\Traits\TableTrait;
-use Qstart\Db\QueryBuilder\DML\Traits\WithTrait;
 
 /**
  * Creating a SQL INSERT Statement.
@@ -14,7 +13,6 @@ class InsertQuery extends QueryAbstract
     use TableTrait {
         TableTrait::setTables as into;
     }
-    use WithTrait;
 
     protected $startOfQuery;
     protected $endOfQuery;

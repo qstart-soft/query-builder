@@ -3,6 +3,7 @@
 namespace Qstart\Db\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Qstart\Db\QueryBuilder\DML\CTE\CTE;
 use Qstart\Db\QueryBuilder\DML\Expression\Expr;
 use Qstart\Db\QueryBuilder\Helper\BindingParamName;
 use Qstart\Db\QueryBuilder\Query;
@@ -44,5 +45,37 @@ class DeleteQueryTest extends TestCase
         $v1 = BindingParamName::getName(BindingParamName::getN());
         $this->assertSame($expr->getExpression(), "DELETE FROM user u LEFT JOIN \"table\" t ON t.id = u.id WHERE t.id = :$v1 LIMIT 1");
         $this->assertSame($expr->getParams(), [$v1 => 2]);
+    }
+
+    public function testWithClause()
+    {
+        $query = Query::delete()
+            ->with([
+                new CTE(
+                    'ids',
+                    Query::select()->select(['id'])->from('"user"'),
+                ),
+            ])
+            ->from('"user"')
+            ->where(['id' => Query::select()->select(['id'])->from('ids')]);
+        $expr = $query->getQueryBuilder()->build();
+        $this->assertSame(
+            'WITH ids AS ((SELECT id FROM "user")) DELETE FROM "user" WHERE id IN (SELECT id FROM ids)',
+            $expr->getExpression(),
+        );
+        $query = Query::delete()
+            ->with([
+                new CTE(
+                    'ids',
+                    new Expr('VALUES (1), (2), (3)'),
+                ),
+            ])
+            ->from('"user"')
+            ->where(['id' => Query::select()->select(['id'])->from('ids')]);
+        $expr = $query->getQueryBuilder()->build();
+        $this->assertSame(
+            'WITH ids AS (VALUES (1), (2), (3)) DELETE FROM "user" WHERE id IN (SELECT id FROM ids)',
+            $expr->getExpression(),
+        );
     }
 }

@@ -3,6 +3,7 @@
 namespace Qstart\Db\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Qstart\Db\QueryBuilder\DML\CTE\CTE;
 use Qstart\Db\QueryBuilder\DML\Expression\Expr;
 use Qstart\Db\QueryBuilder\Helper\BindingParamName;
 use Qstart\Db\QueryBuilder\Query;
@@ -56,5 +57,39 @@ class UpdateQueryTest extends TestCase
         $v1 = BindingParamName::getName(BindingParamName::getN());
         $this->assertSame($expr->getExpression(), "UPDATE user u SET status = 'active' LEFT JOIN \"table\" t ON t.id = u.id WHERE t.id = :$v1 LIMIT 1");
         $this->assertSame($expr->getParams(), [$v1 => 2]);
+    }
+
+    public function testWithClause()
+    {
+        $query = Query::update()
+            ->with([
+                new CTE(
+                    'ids',
+                    Query::select()->select(['id'])->from('"user"'),
+                ),
+            ])
+            ->setTable('"user"')
+            ->joinFrom('ids')
+            ->set(['id' => new Expr('ids.id')]);
+        $expr = $query->getQueryBuilder()->build();
+        $this->assertSame(
+            'WITH ids AS ((SELECT id FROM "user")) UPDATE "user" SET id = ids.id FROM ids',
+            $expr->getExpression(),
+        );
+        $query = Query::update()
+            ->with([
+                new CTE(
+                    'ids',
+                    new Expr('VALUES (1), (2), (3)'),
+                ),
+            ])
+            ->setTable('"user"')
+            ->joinFrom('ids')
+            ->set(['id' => new Expr('ids.id')]);
+        $expr = $query->getQueryBuilder()->build();
+        $this->assertSame(
+            'WITH ids AS (VALUES (1), (2), (3)) UPDATE "user" SET id = ids.id FROM ids',
+            $expr->getExpression(),
+        );
     }
 }

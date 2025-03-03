@@ -10,9 +10,9 @@ trait WithTrait
     /** @var CTE[] $with */
     protected array $with = [];
 
-    public function addWith(string $alias, SelectQuery $query, bool $recursive = false): self
+    public function addWith(CTE $with): self
     {
-        $this->with[] = new CTE($alias, $query, $recursive);
+        $this->with[] = $with;
         return $this;
     }
 
