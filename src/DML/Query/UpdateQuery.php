@@ -7,6 +7,7 @@ use Qstart\Db\QueryBuilder\DML\Traits\ConditionTrait;
 use Qstart\Db\QueryBuilder\DML\Traits\JoiningTrait;
 use Qstart\Db\QueryBuilder\DML\Traits\LimitTrait;
 use Qstart\Db\QueryBuilder\DML\Traits\TableTrait;
+use Qstart\Db\QueryBuilder\DML\Traits\WithTrait;
 
 /**
  * Creating a SQL UPDATE Statement.
@@ -19,6 +20,7 @@ class UpdateQuery extends QueryAbstract
     use JoiningTrait;
     use ConditionTrait;
     use LimitTrait;
+    use WithTrait;
 
     protected array $joinFrom = [];
     protected array $attributes = [];
